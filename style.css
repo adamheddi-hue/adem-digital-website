@@ -160,18 +160,26 @@ h2 { font-family: "Space Grotesk"; font-size: clamp(2.2rem, 4vw, 3.65rem); line-
 
 .services-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .service-card {
-  position: relative; overflow: hidden; min-height: 280px; padding: 26px;
+  position: relative; overflow: hidden; min-height: 280px; padding: 0 26px 26px;
   border: 1px solid var(--line); border-radius: var(--radius); background: var(--card);
   transition: .3s;
 }
+.service-img {
+  width: calc(100% + 52px); margin-left: -26px; margin-top: -26px; margin-bottom: 16px;
+  height: 180px; overflow: hidden; border-radius: var(--radius) var(--radius) 0 0;
+}
+.service-img img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform .4s;
+}
+.service-card:hover .service-img img { transform: scale(1.08); }
 .service-card::after {
   content: ""; position: absolute; width: 150px; height: 150px; right: -80px; bottom: -80px;
   background: var(--gradient); filter: blur(50px); opacity: 0; transition: .35s;
 }
 .service-card:hover { transform: translateY(-7px); border-color: rgba(91,139,255,.5); background: rgba(255,255,255,.95); }
 .service-card:hover::after { opacity: .18; }
-.service-number { color: #8090a8; font-family: "Space Grotesk"; font-size: .72rem; }
-.service-icon { width: 48px; height: 48px; display: grid; place-items: center; margin: 34px 0 23px; border-radius: 14px; border: 1px solid rgba(95,142,255,.3); background: rgba(75,124,255,.1); color: var(--cyan); font-size: 1.25rem; }
+.service-number { color: #8090a8; font-family: "Space Grotesk"; font-size: .72rem; margin-top: 4px; }
 .service-card h3 { font-family: "Space Grotesk"; font-size: 1.08rem; margin-bottom: 10px; }
 .service-card p { color: var(--muted); font-size: .82rem; line-height: 1.7; }
 
@@ -345,7 +353,8 @@ select option { background: white; color: var(--text); }
   .client-strip { overflow: hidden; justify-content: flex-start; }
   .client-strip span:nth-of-type(n+3), .client-strip i:nth-of-type(n+3) { display: none; }
   .services-grid, .portfolio-grid, .process-line { grid-template-columns: 1fr; }
-  .service-card { min-height: 250px; }
+  .service-card { min-height: auto; }
+  .service-img { height: 200px; }
   .project, .project--wide { grid-column: auto; min-height: 360px; }
   .section-heading { margin-bottom: 34px; }
   .testimonial-slider { grid-template-columns: 1fr; }
