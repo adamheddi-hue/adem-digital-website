@@ -323,10 +323,8 @@ select option { background: white; color: var(--text); }
   .hero-actions { justify-content: center; flex-direction: column; align-items: center; }
   .hero-actions .btn { width: 100%; max-width: 320px; }
   .hero-stats { justify-content: center; gap: 30px; }
-  .hero-visual { max-width: 100%; margin: 10px auto 0; order: 2; }
+  .hero-visual { max-width: 100%; margin: 20px auto 0; order: 2; }
   .visual-card img { aspect-ratio: auto; }
-  .floating-card--top { right: 5px; top: 8%; }
-  .floating-card--bottom { left: 5px; bottom: 8%; }
   .about-grid, .faq-grid, .contact-wrap { grid-template-columns: 1fr; }
   .about-grid { gap: 55px; }
   .section-visual { max-width: 600px; margin: auto; }
@@ -347,17 +345,19 @@ select option { background: white; color: var(--text); }
   .nav { height: 72px; }
   .logo { font-size: .86rem; }
   .logo-mark { width: 34px; height: 34px; }
-  .hero { padding-top: 110px; }
-  .hero h1 { font-size: clamp(3.2rem, 16vw, 5rem); text-align: center; }
-  .hero-subtitle { font-size: 1rem; }
-  .hero-actions .btn { max-width: 100%; }
-  .hero-stats { gap: 12px; justify-content: center; }
+  .hero { padding-top: 100px; padding-bottom: 30px; min-height: auto; }
+  .hero h1 { font-size: clamp(2.8rem, 14vw, 4.5rem); text-align: center; margin-left: 0; }
+  .hero-subtitle { font-size: 1rem; text-align: center; margin: 20px auto 10px; }
+  .hero-text { font-size: .9rem; text-align: center; margin: 0 auto; }
+  .hero-actions { margin-top: 24px; }
+  .hero-actions .btn { max-width: 100%; min-height: 48px; }
+  .hero-stats { gap: 16px; margin-top: 30px; justify-content: center; }
   .hero-stats strong { font-size: 1.2rem; }
   .hero-stats span { font-size: .6rem; }
-  .floating-card--top { right: 0; top: 5%; }
-  .floating-card--bottom { left: 0; bottom: 5%; }
-  .floating-card { padding: 10px 12px; }
-  .client-strip { overflow: hidden; justify-content: flex-start; }
+  .eyebrow { font-size: .65rem; margin-bottom: 14px; }
+  .eyebrow span { width: 20px; }
+  .floating-card { display: none; }
+  .client-strip { overflow: hidden; justify-content: center; }
   .client-strip span:nth-of-type(n+3), .client-strip i:nth-of-type(n+3) { display: none; }
   .services-grid, .portfolio-grid, .process-line { grid-template-columns: 1fr; }
   .service-card { min-height: auto; }
