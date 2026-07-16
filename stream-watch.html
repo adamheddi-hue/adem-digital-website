@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#070b18" />
+  <title>Watching Stream | Adem Digital</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <!-- Socket.IO client library — loaded from server -->
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    /* =====================================================
+       VIEWER WATCH PAGE — DARK THEME
+       Matches existing Adem Digital design tokens
+       ===================================================== */
+    :root {
+      --bg: #060912;
+      --bg-soft: #0b1020;
+      --card: rgba(15, 22, 42, .78);
+      --text: #f6f8ff;
+      --muted: #9aa6bf;
+      --line: rgba(255,255,255,.11);
+      --primary: #4b7cff;
+      --secondary: #7c4dff;
+      --cyan: #20d9ff;
+      --green: #34d399;
+      --red: #ff4b6a;
+      --gradient: linear-gradient(135deg, #20d9ff 0%, #4b7cff 48%, #8c4dff 100%);
+      --radius: 22px;
+      --shadow: 0 24px 80px rgba(0,0,0,.35);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Manrope", sans-serif; color: var(--text);
+      background: var(--bg); min-height: 100vh;
+      display: flex; flex-direction: column; overflow-x: hidden;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    .back-link {
+      position: fixed; top: 28px; left: 32px; z-index: 10;
+      display: inline-flex; align-items: center; gap: 8px;
+      color: var(--muted); font-size: .85rem; font-weight: 600; transition: .2s;
+    }
+    .back-link:hover { color: var(--text); }
+
+    .glow { position: fixed; width: 420px; height: 420px; filter: blur(110px); opacity: .12; pointer-events: none; z-index: 0; }
+    .glow--one { background: #3268ff; left: -180px; top: 25%; }
+    .glow--two { background: #8a3eff; right: -180px; bottom: 10%; }
+
+    /* Main layout */
+    .watch-page {
+      position: relative; z-index: 1;
+      width: min(1100px, calc(100% - 40px));
+      margin: 120px auto 60px; animation: fadeIn .6s ease;
+    }
+
+    /* Header bar */
+    .watch-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+    }
+    .watch-header h2 { font-family: "Space Grotesk"; font-size: 1.4rem; letter-spacing: -.02em; }
+    .stream-id-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border-radius: 12px;
+      background: var(--card); border: 1px solid var(--line);
+      font-family: "Space Grotesk"; font-size: .78rem; font-weight: 700;
+      letter-spacing: .1em; color: var(--cyan);
+    }
+    .live-badge {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 6px 14px; border-radius: 30px;
+      background: rgba(52,211,153,.12); border: 1px solid rgba(52,211,153,.3);
+      font-size: .72rem; font-weight: 800; color: var(--green);
+      text-transform: uppercase; letter-spacing: .1em;
+    }
+    .live-badge::before {
+      content: ""; width: 7px; height: 7px; border-radius: 50%;
+      background: var(--green); animation: pulse-dot 1.5s ease-in-out infinite;
+    }
+
+    /* Connection status message */
+    .status-banner {
+      display: none; text-align: center; padding: 20px;
+      border-radius: 16px; margin-bottom: 20px;
+      font-weight: 600; font-size: .9rem;
+    }
+    .status-banner.connecting { display: block; background: rgba(75,124,255,.08); border: 1px solid rgba(75,124,255,.25); color: var(--primary); }
+    .status-banner.error { display: block; background: rgba(255,75,106,.08); border: 1px solid rgba(255,75,106,.25); color: var(--red); }
+    .status-banner.ended { display: block; background: rgba(255,255,255,.04); border: 1px solid var(--line); color: var(--muted); }
+
+    /* Video player */
+    .player-wrapper {
+      position: relative; width: 100%; aspect-ratio: 16/9;
+      border-radius: var(--radius); overflow: hidden;
+      border: 1px solid var(--line); background: #0a0e1b;
+      box-shadow: var(--shadow);
+    }
+    .player-wrapper video {
+      width: 100%; height: 100%; object-fit: contain; display: block;
+      background: #000;
+    }
+
+    /* Waiting placeholder */
+    .waiting-overlay {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 16px; color: var(--muted);
+    }
+    .waiting-overlay.hidden { display: none; }
+    .spinner {
+      width: 44px; height: 44px; border-radius: 50%;
+      border: 3px solid var(--line); border-top-color: var(--primary);
+      animation: spin 1s linear infinite;
+    }
+    .waiting-overlay span { font-size: .88rem; }
+
+    /* Stream info bar */
+    .stream-info {
+      display: flex; align-items: center; gap: 20px;
+      margin-top: 18px; color: var(--muted); font-size: .8rem;
+    }
+    .stream-info .dot { width: 3px; height: 3px; border-radius: 50%; background: #3e475c; }
+
+    /* Ended screen overlay */
+    .ended-overlay {
+      position: absolute; inset: 0;
+      display: none; flex-direction: column; align-items: center; justify-content: center;
+      gap: 16px; background: rgba(6,9,18,.92); backdrop-filter: blur(12px);
+      border-radius: var(--radius);
+    }
+    .ended-overlay.show { display: flex; }
+    .ended-overlay h3 {
+      font-family: "Space Grotesk"; font-size: 1.6rem; letter-spacing: -.02em;
+    }
+    .ended-overlay p { color: var(--muted); font-size: .9rem; }
+    .ended-overlay .btn-home {
+      margin-top: 12px; padding: 14px 30px; border: none; border-radius: 13px;
+      background: var(--gradient); color: white;
+      font-family: "Space Grotesk"; font-size: .95rem; font-weight: 700;
+      cursor: pointer; transition: .25s;
+    }
+    .ended-overlay .btn-home:hover { transform: translateY(-2px); box-shadow: 0 14px 40px rgba(75,124,255,.3); }
+
+    /* Animations */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 600px) {
+      .watch-page { margin-top: 100px; }
+      .watch-header { flex-direction: column; align-items: flex-start; }
+      .stream-info { flex-wrap: wrap; gap: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="glow glow--one"></div>
+  <div class="glow glow--two"></div>
+
+  <a class="back-link" href="stream.html">← Back</a>
+
+  <!-- ===========================================================
+       WATCH PAGE
+       Displays the host's live stream via WebRTC.
+       Viewer has no mic/camera access — view only.
+       =========================================================== -->
+  <div class="watch-page">
+    <!-- Header -->
+    <div class="watch-header">
+      <h2>Live Stream</h2>
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <div class="stream-id-badge" id="streamIdBadge">ID: ------</div>
+        <div class="live-badge" id="liveBadge">Live</div>
+      </div>
+    </div>
+
+    <!-- Connection status banner -->
+    <div class="status-banner connecting" id="statusBanner">Connecting to stream...</div>
+
+    <!-- Video player -->
+    <div class="player-wrapper">
+      <video id="remoteVideo" autoplay playsinline></video>
+      <div class="waiting-overlay" id="waitingOverlay">
+        <div class="spinner"></div>
+        <span>Waiting for host to connect...</span>
+      </div>
+      <!-- Ended overlay — shown when stream ends -->
+      <div class="ended-overlay" id="endedOverlay">
+        <h3>Stream Ended</h3>
+        <p>The host has ended this stream.</p>
+        <button class="btn-home" onclick="window.location.href='stream.html'">Back to Streams</button>
+      </div>
+    </div>
+
+    <!-- Info bar -->
+    <div class="stream-info">
+      <span>View only</span>
+      <div class="dot"></div>
+      <span>No microphone access</span>
+      <div class="dot"></div>
+      <span>Protected stream</span>
+    </div>
+  </div>
+
+  <!-- ===========================================================
+       VIEWER WebRTC + SIGNALING LOGIC
+       ===========================================================
+       This script handles:
+       1. Reading Stream ID + Access Code from URL params
+       2. Connecting to Socket.IO for signaling
+       3. Receiving WebRTC offer from host
+       4. Creating answer and exchanging ICE candidates
+       5. Displaying the remote video stream
+       6. Handling stream end / host disconnect
+       =========================================================== -->
+  <script>
+    /* ---- Parse URL Parameters ---- */
+    const params = new URLSearchParams(window.location.search);
+    const streamId = params.get("streamId");
+    const accessCode = params.get("accessCode");
+
+    /* ---- DOM References ---- */
+    const remoteVideo = document.getElementById("remoteVideo");
+    const streamIdBadge = document.getElementById("streamIdBadge");
+    const statusBanner = document.getElementById("statusBanner");
+    const waitingOverlay = document.getElementById("waitingOverlay");
+    const endedOverlay = document.getElementById("endedOverlay");
+    const liveBadge = document.getElementById("liveBadge");
+
+    /* ---- Validate URL params ---- */
+    if (!streamId || !accessCode) {
+      // No credentials provided — redirect back to auth page
+      window.location.href = "stream.html";
+    }
+
+    /* Display the stream ID in the header */
+    streamIdBadge.textContent = `ID: ${streamId}`;
+
+    /* ---- State ---- */
+    let socket = null;
+    let peerConnection = null;
+
+    /**
+     * WebRTC configuration.
+     * STUN servers for NAT traversal.
+     */
+    const rtcConfig = {
+      iceServers: [
+        { urls: "stun:stun.l.google.com:19302" },
+        { urls: "stun:stun1.l.google.com:19302" },
+      ],
+    };
+
+    /**
+     * Update the status banner with a message and style.
+     */
+    function setStatus(text, type) {
+      statusBanner.textContent = text;
+      statusBanner.className = `status-banner ${type}`;
+    }
+
+    /* ===========================================================
+     * SOCKET.IO CONNECTION
+     * =========================================================== */
+    function connectToStream() {
+      setStatus("Connecting to stream...", "connecting");
+
+      socket = io();
+
+      /**
+       * Connected to signaling server.
+       * Now announce ourselves as a viewer.
+       */
+      socket.on("connect", () => {
+        socket.emit("viewer-join", { streamId });
+      });
+
+      /**
+       * Received WebRTC offer from the host.
+       * Create a peer connection, set remote description,
+       * create an answer, and send it back.
+       */
+      socket.on("offer", async ({ from, offer }) => {
+        console.log("Received offer from host:", from);
+
+        // Create peer connection
+        peerConnection = new RTCPeerConnection(rtcConfig);
+
+        /**
+         * When we receive remote tracks (video/audio from host),
+         * attach them to the video element for playback.
+         */
+        peerConnection.ontrack = (event) => {
+          console.log("Received remote track:", event.track.kind);
+          if (event.streams && event.streams[0]) {
+            remoteVideo.srcObject = event.streams[0];
+            waitingOverlay.classList.add("hidden");
+            setStatus("Connected — watching live stream", "connecting");
+            // Hide status after a moment
+            setTimeout(() => { statusBanner.style.display = "none"; }, 3000);
+          }
+        };
+
+        /**
+         * Handle ICE candidates from our side.
+         * Send them to the host via signaling.
+         */
+        peerConnection.onicecandidate = (event) => {
+          if (event.candidate) {
+            socket.emit("ice-candidate", {
+              to: from,
+              candidate: event.candidate,
+            });
+          }
+        };
+
+        // Log connection state for debugging
+        peerConnection.onconnectionstatechange = () => {
+          console.log("Viewer connection state:", peerConnection.connectionState);
+          if (peerConnection.connectionState === "connected") {
+            setStatus("Connected", "connecting");
+            setTimeout(() => { statusBanner.style.display = "none"; }, 2000);
+          }
+          if (peerConnection.connectionState === "disconnected" ||
+              peerConnection.connectionState === "failed") {
+            setStatus("Connection lost. Trying to reconnect...", "error");
+          }
+        };
+
+        // Set the host's offer as remote description
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+
+        // Create our answer
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+
+        // Send the answer back to the host
+        socket.emit("answer", {
+          to: from,
+          answer: peerConnection.localDescription,
+        });
+      });
+
+      /**
+       * Received ICE candidate from the host.
+       * Add it to our peer connection for connectivity.
+       */
+      socket.on("ice-candidate", async ({ from, candidate }) => {
+        if (peerConnection && candidate) {
+          try {
+            await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+          } catch (err) {
+            console.error("Error adding ICE candidate:", err);
+          }
+        }
+      });
+
+      /**
+       * The host has ended the stream.
+       * Show the ended overlay and clean up.
+       */
+      socket.on("stream-ended", ({ message }) => {
+        console.log("Stream ended:", message);
+        setStatus("Stream has ended", "ended");
+        liveBadge.style.display = "none";
+        waitingOverlay.classList.add("hidden");
+        endedOverlay.classList.add("show");
+
+        // Clean up peer connection
+        if (peerConnection) {
+          peerConnection.close();
+          peerConnection = null;
+        }
+      });
+
+      /**
+       * Stream error (e.g., invalid stream, not active).
+       */
+      socket.on("stream-error", ({ message }) => {
+        setStatus(message, "error");
+        waitingOverlay.classList.add("hidden");
+      });
+
+      /**
+       * Socket disconnected from server.
+       */
+      socket.on("disconnect", () => {
+        if (!endedOverlay.classList.contains("show")) {
+          setStatus("Disconnected from server. Reconnecting...", "error");
+        }
+      });
+
+      /**
+       * Socket reconnected.
+       * Re-join the stream as a viewer.
+       */
+      socket.on("reconnect", () => {
+        if (!endedOverlay.classList.contains("show")) {
+          socket.emit("viewer-join", { streamId });
+          setStatus("Reconnecting...", "connecting");
+        }
+      });
+    }
+
+    /* ---- Initialize: connect to the stream on page load ---- */
+    connectToStream();
+
+    /**
+     * Clean up when the viewer leaves the page.
+     * Closes the peer connection and disconnects the socket.
+     */
+    window.addEventListener("beforeunload", () => {
+      if (peerConnection) peerConnection.close();
+      if (socket) socket.disconnect();
+    });
+  </script>
+</body>
+</html>

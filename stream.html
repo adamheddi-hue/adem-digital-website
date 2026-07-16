@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#070b18" />
+  <title>Watch Stream | Adem Digital</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* =====================================================
+       VIEWER AUTH PAGE — DARK THEME
+       Matches existing Adem Digital design tokens
+       ===================================================== */
+    :root {
+      --bg: #060912;
+      --bg-soft: #0b1020;
+      --card: rgba(15, 22, 42, .78);
+      --text: #f6f8ff;
+      --muted: #9aa6bf;
+      --line: rgba(255,255,255,.11);
+      --primary: #4b7cff;
+      --secondary: #7c4dff;
+      --cyan: #20d9ff;
+      --red: #ff4b6a;
+      --gradient: linear-gradient(135deg, #20d9ff 0%, #4b7cff 48%, #8c4dff 100%);
+      --radius: 22px;
+      --shadow: 0 24px 80px rgba(0,0,0,.35);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Manrope", sans-serif; color: var(--text);
+      background: var(--bg); min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      overflow-x: hidden;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    .back-link {
+      position: fixed; top: 28px; left: 32px; z-index: 10;
+      display: inline-flex; align-items: center; gap: 8px;
+      color: var(--muted); font-size: .85rem; font-weight: 600; transition: .2s;
+    }
+    .back-link:hover { color: var(--text); }
+
+    .glow { position: fixed; width: 420px; height: 420px; filter: blur(110px); opacity: .12; pointer-events: none; z-index: 0; }
+    .glow--one { background: #3268ff; left: -180px; top: 25%; }
+    .glow--two { background: #8a3eff; right: -180px; bottom: 10%; }
+
+    /* ---- Auth Card ---- */
+    .auth-card {
+      position: relative; z-index: 1;
+      width: min(480px, calc(100% - 40px));
+      padding: 48px 40px; border-radius: 28px;
+      border: 1px solid var(--line); background: var(--card);
+      backdrop-filter: blur(18px);
+      animation: fadeIn .6s ease;
+    }
+    .auth-card h1 {
+      font-family: "Space Grotesk"; font-size: 1.8rem;
+      letter-spacing: -.03em; margin-bottom: 6px; text-align: center;
+    }
+    .auth-card > p {
+      color: var(--muted); font-size: .9rem; margin-bottom: 32px;
+      text-align: center; line-height: 1.6;
+    }
+
+    /* Form fields */
+    .field { margin-bottom: 20px; }
+    .field label {
+      display: block; margin-bottom: 8px;
+      color: var(--muted); font-size: .72rem;
+      text-transform: uppercase; letter-spacing: .12em; font-weight: 700;
+    }
+    .field input {
+      width: 100%; padding: 16px 18px;
+      font-family: "Space Grotesk"; font-size: 1.15rem; font-weight: 700;
+      letter-spacing: .2em; text-align: center;
+      background: rgba(255,255,255,.04); border: 1px solid var(--line);
+      border-radius: 14px; color: var(--text); outline: 0; transition: .3s;
+    }
+    .field input::placeholder { letter-spacing: .08em; color: #444a60; font-size: .9rem; font-weight: 500; }
+    .field input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(75,124,255,.15); }
+    .field input.error { border-color: var(--red); box-shadow: 0 0 0 3px rgba(255,75,106,.15); animation: shake .4s ease; }
+
+    .join-btn {
+      width: 100%; padding: 17px; border: none; border-radius: 14px;
+      background: var(--gradient); color: white;
+      font-family: "Space Grotesk"; font-size: 1.05rem; font-weight: 700;
+      cursor: pointer; transition: .25s; margin-top: 8px;
+    }
+    .join-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 40px rgba(75,124,255,.3); }
+    .join-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    .error-msg {
+      margin-top: 16px; color: var(--red); font-size: .82rem; font-weight: 600;
+      text-align: center; opacity: 0; transition: .3s;
+    }
+    .error-msg.show { opacity: 1; }
+
+    .divider {
+      display: flex; align-items: center; gap: 14px;
+      margin: 28px 0; color: #3e475c; font-size: .72rem;
+    }
+    .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+    .host-link {
+      text-align: center; font-size: .85rem; color: var(--muted);
+    }
+    .host-link a { color: var(--primary); font-weight: 700; transition: .2s; }
+    .host-link a:hover { text-decoration: underline; }
+
+    /* Animations */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+
+    @media (max-width: 500px) {
+      .auth-card { padding: 36px 24px; }
+      .field input { font-size: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="glow glow--one"></div>
+  <div class="glow glow--two"></div>
+
+  <a class="back-link" href="index.html">← Back to site</a>
+
+  <!-- ===========================================================
+       VIEWER AUTH FORM
+       Viewers enter Stream ID + Access Code here.
+       On success, redirected to stream-watch.html with params.
+       =========================================================== -->
+  <div class="auth-card">
+    <h1>Join Stream</h1>
+    <p>Enter the Stream ID and Access Code shared by the host to watch.</p>
+
+    <form id="authForm" autocomplete="off">
+      <div class="field">
+        <label>Stream ID</label>
+        <input
+          type="text" id="streamIdInput" name="streamId"
+          placeholder="e.g. A7F92K" maxlength="6"
+          autocomplete="off" autocapitalize="characters" spellcheck="false" required
+        />
+      </div>
+      <div class="field">
+        <label>Access Code</label>
+        <input
+          type="password" id="accessCodeInput" name="accessCode"
+          placeholder="6-digit code" maxlength="6"
+          inputmode="numeric" autocomplete="off" required
+        />
+      </div>
+      <button class="join-btn" type="submit" id="joinBtn">Join Stream →</button>
+      <div class="error-msg" id="errorMsg"></div>
+    </form>
+
+    <div class="divider">or</div>
+    <div class="host-link">
+      Want to <a href="stream-host.html">host a stream</a> instead?
+    </div>
+  </div>
+
+  <!-- ===========================================================
+       VIEWER AUTH LOGIC
+       Validates Stream ID + Access Code against the server API,
+       then redirects to the watch page on success.
+       =========================================================== -->
+  <script>
+    const authForm = document.getElementById("authForm");
+    const streamIdInput = document.getElementById("streamIdInput");
+    const accessCodeInput = document.getElementById("accessCodeInput");
+    const joinBtn = document.getElementById("joinBtn");
+    const errorMsg = document.getElementById("errorMsg");
+
+    /**
+     * Auto-capitalize Stream ID as user types.
+     * Stream IDs are always uppercase alphanumeric.
+     */
+    streamIdInput.addEventListener("input", () => {
+      streamIdInput.value = streamIdInput.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+      clearError();
+    });
+
+    accessCodeInput.addEventListener("input", clearError);
+
+    function clearError() {
+      streamIdInput.classList.remove("error");
+      accessCodeInput.classList.remove("error");
+      errorMsg.classList.remove("show");
+    }
+
+    function showError(msg) {
+      errorMsg.textContent = msg;
+      errorMsg.classList.add("show");
+      streamIdInput.classList.add("error");
+      accessCodeInput.classList.add("error");
+    }
+
+    /**
+     * Handle form submission.
+     * Sends Stream ID + Access Code to the server for validation.
+     * On success, redirects to stream-watch.html with query params.
+     */
+    authForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearError();
+
+      const streamId = streamIdInput.value.trim();
+      const accessCode = accessCodeInput.value.trim();
+
+      if (!streamId || streamId.length < 4) {
+        showError("Please enter a valid Stream ID.");
+        return;
+      }
+      if (!accessCode || accessCode.length < 4) {
+        showError("Please enter a valid Access Code.");
+        return;
+      }
+
+      joinBtn.disabled = true;
+      joinBtn.textContent = "Verifying...";
+
+      try {
+        const res = await fetch("/api/streams/validate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ streamId, accessCode }),
+        });
+        const data = await res.json();
+
+        if (data.valid) {
+          // Redirect to the watch page with validated credentials
+          window.location.href = `stream-watch.html?streamId=${encodeURIComponent(streamId)}&accessCode=${encodeURIComponent(accessCode)}`;
+        } else {
+          showError(data.message || "Invalid Stream ID or Access Code.");
+        }
+      } catch (err) {
+        console.error("Validation error:", err);
+        showError("Could not connect to server. Try again.");
+      } finally {
+        joinBtn.disabled = false;
+        joinBtn.textContent = "Join Stream →";
+      }
+    });
+  </script>
+</body>
+</html>
