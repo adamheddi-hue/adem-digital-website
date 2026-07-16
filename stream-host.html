@@ -208,7 +208,7 @@
        =========================================================== -->
   <div class="host-page" id="preStream">
     <h1>Start Live Stream</h1>
-    <p>Grant camera and microphone access, then click "Go Live" to start your private stream.</p>
+    <p>Select your game window or screen to share, then click "Go Live" to start your private stream.</p>
 
     <div class="camera-prompt">
       <video id="previewVideo" autoplay muted playsinline></video>
@@ -318,20 +318,37 @@
     }
 
     /* ===========================================================
-     * STEP 1: Request Camera/Mic & Show Preview
+     * STEP 1: Request Screen Share + Mic & Show Preview
+     * Uses getDisplayMedia for screen/game sharing + getUserMedia for mic
      * =========================================================== */
     async function initCamera() {
       try {
-        localStream = await navigator.mediaDevices.getUserMedia({
-          video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+        // Request screen share (l-game / l-desktop)
+        localStream = await navigator.mediaDevices.getDisplayMedia({
+          video: { width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 60 } },
           audio: true,
         });
+
+        // Also try to get microphone audio separately
+        try {
+          const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          micStream.getAudioTracks().forEach(track => localStream.addTrack(track));
+        } catch (e) {
+          // Mic not critical - screen share works without it
+        }
+
         previewVideo.srcObject = localStream;
-        showToast("Camera ready!", "success");
+        showToast("Screen sharing ready!", "success");
         startBtn.disabled = false;
+
+        // If user stops sharing, end the stream automatically
+        localStream.getVideoTracks()[0].onended = () => {
+          showToast("Screen sharing stopped.", "error");
+          endStream();
+        };
       } catch (err) {
-        console.error("Camera access denied:", err);
-        showToast("Camera/microphone access is required.", "error");
+        console.error("Screen share access denied:", err);
+        showToast("Screen share permission is required.", "error");
         startBtn.disabled = true;
       }
     }
