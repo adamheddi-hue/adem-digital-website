@@ -47,9 +47,9 @@ navLinks.addEventListener('click', function (e) {
 });
 
 /* Close menu on logo click */
-document.querySelector('.logo').addEventListener('click', function (e) {
+document.querySelector('.logo').addEventListener('click', function () {
   if (isMenuOpen()) {
-    e.preventDefault();
+    savedScrollY = 0;
     closeMenu();
   }
 });
