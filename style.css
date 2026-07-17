@@ -87,7 +87,8 @@ button { cursor: pointer; }
 .full { width: 100%; }
 
 .hero { padding-top: 154px; padding-bottom: 52px; min-height: 100vh; display: flex; align-items: center; }
-.hero-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 70px; align-items: center; }
+.hero-grid { display: grid; grid-template-columns: .95fr 1.05fr; gap: 70px; align-items: center; }
+.hero-visual { order: -1; }
 .eyebrow { display: flex; align-items: center; gap: 10px; color: #6b7394; text-transform: uppercase; letter-spacing: .16em; font-size: .72rem; font-weight: 800; margin-bottom: 18px; }
 .eyebrow span { width: 30px; height: 2px; background: var(--gradient); }
 .hero h1 { font-family: "Space Grotesk"; font-size: clamp(4rem, 7vw, 7rem); line-height: .87; letter-spacing: -.07em; margin-left: -5px; }
